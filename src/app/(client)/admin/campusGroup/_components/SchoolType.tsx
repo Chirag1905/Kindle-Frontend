@@ -1,0 +1,21 @@
+export interface SchoolType {
+    id: number;
+    name: string;
+    affiliationNumber: string;
+    beginningYear: number;
+    website?: string;
+    emailDomain?: string;
+    founder?: string;
+    principal?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+    isActive: boolean;
+    createdTs: string;
+    updatedTs: string;
+    dbUser: string;
+};
