@@ -1,3 +1,4 @@
+import { AuthPayload, AuthResponse } from "@/types/auth";
 import axios, { AxiosResponse } from "axios";
 
 // ---------- Environment Variables ----------

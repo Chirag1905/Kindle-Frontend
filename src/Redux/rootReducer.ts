@@ -1,8 +1,10 @@
 import { combineReducers, Reducer, AnyAction } from "@reduxjs/toolkit";
 import academicYearReducer from "./features/academicYear/academicYearSlice";
 import schoolClassReducer from "./features/schoolclass/schoolClassSlice";
+import authSaga from "./features/auth/authSaga";
 
 const appReducer = combineReducers({
+  authSaga: authSaga,
   academicYear: academicYearReducer,
   schoolClass: schoolClassReducer,
 });

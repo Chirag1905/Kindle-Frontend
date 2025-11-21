@@ -1,155 +1,86 @@
-import { createSlice, PayloadAction, CaseReducer } from "@reduxjs/toolkit";
-import type { SliceCaseReducers } from "@reduxjs/toolkit";
+import { AuthState, AuthResponse } from "@/types/auth";
+import { ApiError, AsyncReducerSet, AsyncState } from "@/types/common";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-// ----------- Types -----------
-
-export interface AcademicYear {
-  id?: string | number;
-  name?: string;
-  startDate?: string;
-  endDate?: string;
-  isActive?: boolean;
-  [key: string]: unknown; // dynamic properties
-}
-
-export interface AsyncState<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-}
-export interface AcademicYearState {
-  academicYearData: AsyncState<AcademicYear[]>;
-  academicYearDataPagination: AsyncState<AcademicYear[]>;
-  academicYearDataFetch: AsyncState<AcademicYear>;
-  academicYearPostData: AsyncState<AcademicYear>;
-  academicYearPutData: AsyncState<AcademicYear>;
-  academicYearDeleteData: AsyncState<AcademicYear>;
-  selectedAcademicYear: AcademicYear | null;
-}
-
-export interface ApiError {
-  message: string;
-  status?: number;
-  [key: string]: unknown;
-}
-
-// ----------- Helper Function -----------
-// Dynamically creates async reducers with proper typing for each action type
-function createAsyncReducers<K extends keyof AcademicYearState, Payload = unknown>(
-  prefix: string,
-  stateKey: K
-): {
-  [key: `${typeof prefix}Request`]: CaseReducer<AcademicYearState>;
-  [key: `${typeof prefix}Success`]: CaseReducer<AcademicYearState, PayloadAction<Payload>>;
-  [key: `${typeof prefix}Failure`]: CaseReducer<AcademicYearState, PayloadAction<ApiError | string>>;
-} {
-  interface AsyncReducers<Payload = unknown> {
-    [key: `${typeof prefix}Request`]: CaseReducer<AcademicYearState>;
-    [key: `${typeof prefix}Success`]: CaseReducer<AcademicYearState, PayloadAction<Payload>>;
-    [key: `${typeof prefix}Failure`]: CaseReducer<AcademicYearState, PayloadAction<ApiError | string>>;
-  }
-
-  const asyncReducers = {
-    [`${prefix}Request`]: (state: AcademicYearState) => {
-      if (state[stateKey]) {
-        state[stateKey]!.loading = true;
-        state[stateKey]!.error = null;
-        state[stateKey]!.data = null;
-      }
-    },
-    [`${prefix}Success`]: (state: AcademicYearState, action: PayloadAction<Payload>) => {
-      if (state[stateKey]) {
-        state[stateKey]!.loading = false;
-        state[stateKey]!.data = action.payload;
-        state[stateKey]!.error = null;
-      }
-    },
-    [`${prefix}Failure`]: (state: AcademicYearState, action: PayloadAction<ApiError | string>) => {
-      if (state[stateKey]) {
-        state[stateKey]!.loading = false;
-        state[stateKey]!.error =
-          typeof action.payload === "string"
-            ? action.payload
-            : action.payload?.message;
-        state[stateKey]!.data = null;
-      }
-    },
-  } as unknown as AsyncReducers<Payload>;
-
-  return asyncReducers;
-}
-
-
+// Create async state instance
 const createInitialAsyncState = <T>(): AsyncState<T> => ({
   data: null,
   loading: false,
   error: null,
 });
 
+// Generic async reducers factory
+function createAsyncReducers<
+  K extends keyof AuthState,
+  Payload extends AuthResponse = AuthResponse,
+  Prefix extends string = string
+>(
+  prefix: Prefix,
+  stateKey: K
+): AsyncReducerSet<AuthState, Payload, Prefix> {
+  return {
+    [`${prefix}Request`]: (state: AuthState) => {
+      const slice = state[stateKey];
+      slice.loading = true;
+      slice.error = null;
+      slice.data = null;
+    },
 
-// ----------- Initial State -----------
-const initialState: AcademicYearState = {
-  academicYearData: createInitialAsyncState<AcademicYear[]>(),
-  academicYearDataPagination: createInitialAsyncState<AcademicYear[]>(),
-  academicYearDataFetch: createInitialAsyncState<AcademicYear>(),
-  academicYearPostData: createInitialAsyncState<AcademicYear>(),
-  academicYearPutData: createInitialAsyncState<AcademicYear>(),
-  academicYearDeleteData: createInitialAsyncState<AcademicYear>(),
-  selectedAcademicYear: null,
+    [`${prefix}Success`]: (
+      state: AuthState,
+      action: PayloadAction<Payload>
+    ) => {
+      const slice = state[stateKey];
+      slice.loading = false;
+      slice.error = null;
+      slice.data = action.payload;
+    },
+
+    [`${prefix}Failure`]: (
+      state: AuthState,
+      action: PayloadAction<ApiError | string>
+    ) => {
+      const slice = state[stateKey];
+      slice.loading = false;
+      slice.data = null;
+      slice.error =
+        typeof action.payload === "string"
+          ? action.payload
+          : action.payload?.message;
+    },
+  } as AsyncReducerSet<AuthState, Payload, Prefix>;
+}
+
+// ---------- Initial ----------
+const initialState: AuthState = {
+  authRegisterData: createInitialAsyncState<AuthResponse>(),
+  authLoginData: createInitialAsyncState<AuthResponse>(),
 };
 
-const reducers: SliceCaseReducers<AcademicYearState> = {
-  ...createAsyncReducers("getAcademicYear", "academicYearData"),
-  ...createAsyncReducers("getAcademicYearPagination", "academicYearDataPagination"),
-  ...createAsyncReducers("getAcademicYearFetch", "academicYearDataFetch"),
-  ...createAsyncReducers("postAcademicYear", "academicYearPostData"),
-  ...createAsyncReducers("putAcademicYear", "academicYearPutData"),
-  ...createAsyncReducers("deleteAcademicYear", "academicYearDeleteData"),
-
-  // Setter for selected academic year
-  setSelectedAcademicYear: (
-    state: AcademicYearState,
-    action: PayloadAction<AcademicYear | null>
-  ) => {
-    state.selectedAcademicYear = action.payload;
-  },
-};
-
-// ----------- Slice -----------
-const academicYearSlice = createSlice({
-  name: "academicYear",
+// ---------- Slice ----------
+const authSlice = createSlice({
+  name: "auth",
   initialState,
-  reducers,
+  reducers: {
+    ...createAsyncReducers<"authRegisterData", AuthResponse>(
+      "postAuthRegister",
+      "authRegisterData"
+    ),
+    ...createAsyncReducers<"authLoginData", AuthResponse>(
+      "postAuthLogin",
+      "authLoginData"
+    ),
+  },
 });
 
-// ----------- Export Actions -----------
 export const {
-  getAcademicYearRequest,
-  getAcademicYearSuccess,
-  getAcademicYearFailure,
+  postAuthRegisterRequest,
+  postAuthRegisterSuccess,
+  postAuthRegisterFailure,
 
-  getAcademicYearPaginationRequest,
-  getAcademicYearPaginationSuccess,
-  getAcademicYearPaginationFailure,
+  postAuthLoginRequest,
+  postAuthLoginSuccess,
+  postAuthLoginFailure,
+} = authSlice.actions;
 
-  getAcademicYearFetchRequest,
-  getAcademicYearFetchSuccess,
-  getAcademicYearFetchFailure,
-
-  postAcademicYearRequest,
-  postAcademicYearSuccess,
-  postAcademicYearFailure,
-
-  putAcademicYearRequest,
-  putAcademicYearSuccess,
-  putAcademicYearFailure,
-
-  deleteAcademicYearRequest,
-  deleteAcademicYearSuccess,
-  deleteAcademicYearFailure,
-
-  setSelectedAcademicYear,
-} = academicYearSlice.actions;
-
-// ----------- Export Reducer -----------
-export default academicYearSlice.reducer;
+export default authSlice.reducer;

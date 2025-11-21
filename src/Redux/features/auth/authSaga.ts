@@ -12,30 +12,20 @@ import {
   postAuthLoginFailure,
 } from "./authSlice";
 
-import {
-  postAuthRegister,
-  postAuthLogin,
-  AuthResponse
-} from "./authApi";
-import { ApiResponse } from "../academicYear/academicYearApi";
-
-// ---------- Types ----------
-
+import { postAuthRegister, postAuthLogin } from "./authApi";
+import { AuthResponse, AuthPayload } from "@/types/auth";
 
 // ---------- Saga Workers ----------
-
-// Create a new academic year
-function* postAuthRegisterSaga(action: PayloadAction<AuthResponse>) {
+function* postAuthRegisterSaga(action: PayloadAction<AuthPayload>) {
   try {
-    const response: AxiosResponse<ApiResponse<AuthResponse>> = yield call(postAuthRegister, action.payload);
-
+    const response: AxiosResponse<AuthResponse> = yield call(postAuthRegister, action.payload);
     if (response.status === 200 || response.status === 201) {
       yield put(postAuthRegisterSuccess(response.data));
     } else {
       yield put(
         postAuthRegisterFailure({
           message: response.data.message,
-          error: response.data.errors || [],
+          error: [],
         })
       );
     }
@@ -50,17 +40,16 @@ function* postAuthRegisterSaga(action: PayloadAction<AuthResponse>) {
   }
 }
 
-function* postAuthLoginSaga(action: PayloadAction<AuthResponse>) {
+function* postAuthLoginSaga(action: PayloadAction<AuthPayload>) {
   try {
-    const response: AxiosResponse<ApiResponse<AuthResponse>> = yield call(postAuthLogin, action.payload);
-
+    const response: AxiosResponse<AuthResponse> = yield call(postAuthLogin, action.payload);
     if (response.status === 200 || response.status === 201) {
       yield put(postAuthLoginSuccess(response.data));
     } else {
       yield put(
         postAuthLoginFailure({
           message: response.data.message,
-          error: response.data.errors || [],
+          error: [],
         })
       );
     }

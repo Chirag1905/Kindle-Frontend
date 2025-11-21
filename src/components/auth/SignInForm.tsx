@@ -6,8 +6,16 @@ import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 export default function SignInForm() {
+   const dispatch = useDispatch();
+    const {
+        authRegisterData,
+        authLoginData
+    } = useSelector((state) => state.auth);
+    
   const [data, setData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
